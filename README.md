@@ -4,7 +4,9 @@
 
 WeatherForensics is a Data as a Service (DaaS) that provides comprehensive historical weather data, including standard conditions and severe weather events, relative to a specified target location and timestamp. While most services focus on the "what," our proprietary engine calculates the localized impact of historical weather events—ranging from localized tornadoes to regional hurricanes—at a specific coordinate and datetime.
 
-This repository contains information, documentation, and a sample Python client script (`rest_api_noaa_client.py`) to interact with the WeatherForensics Representational State Transfer (REST) Application Programming Interface (API).
+This repository contains information, documentation, and a sample Python client script (`rest_api_noaa_client.py`) to interact with the WeatherForensics Representational State Transfer (REST) Application Programming Interface (API).  
+
+See also the WeatherForensics website at [WeatherForensics.dev](https://weatherforensics.dev/).
 
 ---
 
