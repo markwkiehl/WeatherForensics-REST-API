@@ -102,7 +102,7 @@ PATH_SRC = PATH_BASE / "src"
 PATH_DATA = PATH_BASE / "data"
 
 # The Forever Free Tier clients will use the following BASE_URL:
-BASE_URL = "https://api-noaa-free-pnu3qtlxoa-uk.a.run.app"
+BASE_URL = "https://weatherforensics.dev/api/free"
 API_KEY = None
 
 # If you are a paid subscriber, update the BASE_URL and API_KEY below with those provide to you with your subscription:
@@ -175,10 +175,14 @@ async def get_server_status(client: httpx.AsyncClient, verbose:bool=False) -> bo
 
             return True
         return False
-    except (httpx.RequestError, httpx.HTTPStatusError):
-        logger.error(f"--- Server is OFFLINE at {BASE_URL} ---")
+    except httpx.HTTPStatusError as e:
+        logger.error(f"--- Server is OFFLINE: HTTP {e.response.status_code} Error ---")
+        logger.error(f"Details: {e.response.text}")
         return False
-
+    except httpx.RequestError as e:
+        logger.error(f"--- Server is OFFLINE: Network/Routing Error ---")
+        logger.error(f"Details: {e}")
+        return False
 
 # /api/noaa_ncei_monthly_weather
 async def run_get_noaa_ncei_monthly_weather(client: httpx.AsyncClient, latitude:float, longitude:float, local_datetime:datetime):
@@ -652,7 +656,7 @@ async def run_get_noaa_swdi_nx3structure_impact_to_location(client: httpx.AsyncC
 
 async def main():
     # Initialize the client once to enable connection pooling
-    async with httpx.AsyncClient(timeout=360.0, params={"key": API_KEY}) as client:
+    async with httpx.AsyncClient(timeout=360.0, params={"key": API_KEY}, follow_redirects=True) as client:
         # Pass the shared client to all functions
 
         # Check if the REST API server is up
