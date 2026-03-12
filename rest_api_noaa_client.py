@@ -1,7 +1,7 @@
 #
 #   Written by:  Mark W Kiehl
 #   http://mechatronicsolutionsllc.com/
-#   http://www.savvysolutions.info/savvycodesolutions/
+#   Copyright © 2026 Mechatronic Solutions LLC, All Rights Reserved
 
 
 # Define the script version in terms of Semantic Versioning (SemVer)
@@ -15,9 +15,12 @@ __version__ = "0.0.2"
 """
 WeatherForensics REST API Client
 
-This script is a client that interacts with an RESTful API Server that has been deployed to Google Cloud Run service.
+This script is a client that interacts with an RESTful API Server that has been deployed to Google Cloud Run service. 
+Find BASE_URL and API_KEY and edit if you are a subscriber, othwise the script is configured for the Forever Free server.
 
-Update BASE_URL in this script with the Google Cloud Run URL for the WeatherForensics API Server. 
+Website:  WeatherForensics.dev
+
+GitHub:  https://github.com/markwkiehl/WeatherForensics-REST-API
 
 
 WeatherForensics Server Endpoints:
@@ -105,11 +108,12 @@ PATH_DATA = PATH_BASE / "data"
 BASE_URL = "https://weatherforensics.dev/api/free"
 API_KEY = None
 
-# If you are a paid subscriber, update the BASE_URL and API_KEY below with those provide to you with your subscription:
-#BASE_URL = "https://gateway-id-api-####-v#-#-########.uk.gateway.dev"
+# If you are a paid subscriber, expose the BASE_URL below and update the API_KEY with the one provided with your subscription:
+#BASE_URL = "https://weatherforensics.dev/api/pro"
 #API_KEY = "your-39-character-api-key-#############"
 
 if DEBUG: logger.info(f"BASE_URL: {BASE_URL}")
+if DEBUG: logger.info(f"API_KEY: {API_KEY}")
 
 # ----------------------------------------------------------------------
 # Call API Server Endpoints
