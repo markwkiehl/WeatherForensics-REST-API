@@ -53,7 +53,8 @@ pip install httpx asyncio python-json-logger
 1. Clone this repository and open `rest_api_noaa_client.py`.
 2. Configure the `BASE_URL` and `API_KEY` constants at the top of the script based on your service tier.
     * **Forever Free Tier:** Leave `API_KEY = None`. Use the default `BASE_URL`: `"https://api-noaa-free-pnu3qtlxoa-uk.a.run.app"`.
-    * **Pro/Enterprise Tier:** Update `BASE_URL` to your custom gateway URL and set `API_KEY` to your 39-character key.
+    * **Pro Tier:** Enable the `BASE_URL` of "https://weatherforensics.dev/api/pro" and set `API_KEY` to your 39-character key.
+    * **Enterprise Tier:** Update `BASE_URL` to your custom gateway URL and set `API_KEY` to your 39-character key.
 
 ### Usage
 Execute the client script from your terminal:
