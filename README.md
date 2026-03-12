@@ -71,8 +71,8 @@ WeatherForensics is deployed on Google Cloud Run and offers predictable pricing 
 | Tier | Price | Rate Limits & Quotas | Infrastructure |
 | :--- | :--- | :--- | :--- |
 | **Forever Free** | $0/mo | 10-15 Requests Per Minute (RPM), 500 Req/Day, 1 Concurrent | Shared Community Resource |
-| **Pro** | $25/mo | 60 RPM, 10,000 Req/Day, 5 Concurrent | Dedicated Endpoints, Zero Cold Starts |
-| **Enterprise** | $249/mo | 500+ RPM, Unlimited Concurrency | Dedicated Instance, Custom Bulk Payloads |
+| **Pro** | $29/mo | 60 RPM, 10,000 Req/Day, 5 Concurrent | Dedicated Endpoints, Zero Cold Starts |
+| **Enterprise** | $279/mo | 500+ RPM, Unlimited Concurrency | Dedicated Instance, Custom Bulk Payloads |
 
 *Note: Free tier users do not need an API key. Excessive volume on the free tier may result in Internet Protocol (IP) throttling or severe latency. Exceeding your tier's rate limits will return a Hypertext Transfer Protocol (HTTP) `429 Too Many Requests` status code.*
 
