@@ -45,7 +45,7 @@ from pathlib import Path
 import httpx
 import asyncio
 import sys
-
+import json
 from datetime import datetime
 
 
@@ -198,11 +198,43 @@ async def get_server_status(client: httpx.AsyncClient, verbose:bool=False, max_r
     return False
 
 
+def decode_nested_json(data):
+    """Recursively parses stringified JSON inside dictionaries or lists.
+    
+    Usage:
+
+        # Parse the outer layer
+        initial_dict = json.loads(json_str)
+        # Decode any hidden JSON strings inside
+        fully_decoded_dict = decode_nested_json(initial_dict)
+        # Print beautifully
+        print(json.dumps(fully_decoded_dict, indent=4))
+
+    
+    """
+    if isinstance(data, str):
+        try:
+            parsed = json.loads(data)
+            # If the decoded string is another dict or list, keep digging
+            if isinstance(parsed, (dict, list)):
+                return decode_nested_json(parsed)
+            return parsed
+        except (json.JSONDecodeError, TypeError):
+            # It's just a normal string, leave it alone
+            return data
+    elif isinstance(data, dict):
+        return {k: decode_nested_json(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [decode_nested_json(item) for item in data]
+    else:
+        return data
+
 
 # /api/noaa_ncei_monthly_weather
 async def run_get_noaa_ncei_monthly_weather(client: httpx.AsyncClient, latitude:float, longitude:float, local_datetime:datetime):
     """
-    
+    Get monthly weather from the NOAA NCEI API endpoint using the WeatherForensics.dev endpoint.
+    WeatherForensics.dev will find the closest weather station with the most data and then acquire the weather data from NOAA.
     """
     endpoint = "/api/noaa_ncei_monthly_weather"
     url = f"{BASE_URL}{endpoint}"
@@ -220,89 +252,7 @@ async def run_get_noaa_ncei_monthly_weather(client: httpx.AsyncClient, latitude:
         result_data = response.json()
         print(f"Output Message: {result_data.get('message')}")
         print(f"Weather Summary: {result_data.get('weather_summary')}")
-        """
-        Output Message: Monthly weather for 2025-07-10 00:00:00 at 40.4407,-76.12267
-        Weather Summary: {
-            "target_metadata": {
-                "latitude": 40.4407,
-                "longitude": -76.12267,
-                "datetime_local": "2025-07-10T00:00:00"
-            },
-            "station_metadata": {
-                "station_id": "USW00014712",
-                "distance_from_target_mi": null,
-                "station_latitude": 40.37342,
-                "station_longitude": -75.95924,
-                "station_name": null,
-                "latitude": 40.37342,
-                "longitude": -75.95924,
-                "start_date_local": "2025-07",
-                "end_date_local": "2025-07"
-            },
-            "data": [
-                {
-                    "measurement": "Precipitation",
-                    "value": "6.69",
-                    "unit": "\"",
-                    "category": "Precipitation"
-                },
-                {
-                    "measurement": "Snowfall",
-                    "value": "0.0",
-                    "unit": "\"",
-                    "category": "Precipitation"
-                },
-                {
-                    "measurement": "Maximum temperature",
-                    "value": "89.2",
-                    "unit": "\u00b0F",
-                    "category": "Temperature"
-                },
-                {
-                    "measurement": "Average temperature",
-                    "value": "80.0",
-                    "unit": "\u00b0F",
-                    "category": "Temperature"
-                },
-                {
-                    "measurement": "Minimum temperature",
-                    "value": "70.7",
-                    "unit": "\u00b0F",
-                    "category": "Temperature"
-                },
-                {
-                    "measurement": "Direction of fastest 2-minute wind",
-                    "value": "300",
-                    "unit": "\u00b0",
-                    "category": "Wind"
-                },
-                {
-                    "measurement": "Direction of fastest 5-second wind",
-                    "value": "300",
-                    "unit": "\u00b0",
-                    "category": "Wind"
-                },
-                {
-                    "measurement": "Fastest 2-minute wind speed",
-                    "value": "49.0",
-                    "unit": "mph",
-                    "category": "Wind"
-                },
-                {
-                    "measurement": "Fastest 5-second wind speed",
-                    "value": "63",
-                    "unit": "mph",
-                    "category": "Wind"
-                },
-                {
-                    "measurement": "Average daily wind speed",
-                    "value": "4.5",
-                    "unit": "mph",
-                    "category": "Wind"
-                }
-            ]
-        }
-        """
+        # See https://weatherforensics.dev/api.html for sample output. 
 
         logger.info("-" * 20)
     except Exception as e:
@@ -312,7 +262,8 @@ async def run_get_noaa_ncei_monthly_weather(client: httpx.AsyncClient, latitude:
 # /api/noaa_ncei_daily_weather
 async def run_get_noaa_ncei_daily_weather(client: httpx.AsyncClient, latitude:float, longitude:float, local_datetime:datetime):
     """
-    
+    Get daily weather from the NOAA NCEI API endpoint using the WeatherForensics.dev endpoint.
+    WeatherForensics.dev will find the closest weather station with the most data and then acquire the weather data from NOAA.
     """
     endpoint = "/api/noaa_ncei_daily_weather"
     url = f"{BASE_URL}{endpoint}"
@@ -334,101 +285,7 @@ async def run_get_noaa_ncei_daily_weather(client: httpx.AsyncClient, latitude:fl
         
         print(f"Output Message: {result_data.get('message')}")
         print(f"Weather Summary: {result_data.get('weather_summary')}")
-        """
-        Output Message: Daily weather for 2025-07-10 00:00:00 at 40.4407,-76.12267
-        Weather Summary: {
-            "target_metadata": {
-                "latitude": 40.4407,
-                "longitude": -76.12267,
-                "datetime_local": "2025-07-10T00:00:00"
-            },
-            "station_metadata": {
-                "station_id": "USW00014712",
-                "distance_from_target_mi": 9.8,
-                "station_latitude": 40.37342,
-                "station_longitude": -75.95924,
-                "STATION": "USW00014712",
-                "DATE": "2025-07-10",
-                "latitude": 40.37342,
-                "longitude": -75.95924
-            },
-            "data": [
-                {
-                    "measurement": "Snowfall",
-                    "value": "0.0",
-                    "unit": "\"",
-                    "category": "Precipitation"
-                },
-                {
-                    "measurement": "Precipitation",
-                    "value": "0.00",
-                    "unit": "\"",
-                    "category": "Precipitation"
-                },
-                {
-                    "measurement": "Snow depth",
-                    "value": "0.0",
-                    "unit": "\"",
-                    "category": "Precipitation"
-                },
-                {
-                    "measurement": "Maximum temperature",
-                    "value": "88",
-                    "unit": "\u00b0F",
-                    "category": "Temperature"
-                },
-                {
-                    "measurement": "Average temperature",
-                    "value": "77",
-                    "unit": "\u00b0F",
-                    "category": "Temperature"
-                },
-                {
-                    "measurement": "Minimum temperature",
-                    "value": "71",
-                    "unit": "\u00b0F",
-                    "category": "Temperature"
-                },
-                {
-                    "measurement": "Fog, ice fog, or freezing fog",
-                    "value": "    1",
-                    "unit": null,
-                    "category": "Weather Type"
-                },
-                {
-                    "measurement": "Fastest 2-minute wind speed",
-                    "value": "8.9",
-                    "unit": "mph",
-                    "category": "Wind"
-                },
-                {
-                    "measurement": "Fastest 5-second wind speed",
-                    "value": "12.1",
-                    "unit": "mph",
-                    "category": "Wind"
-                },
-                {
-                    "measurement": "Direction of fastest 2-minute wind",
-                    "value": "  160",
-                    "unit": "\u00b0",
-                    "category": "Wind"
-                },
-                {
-                    "measurement": "Average daily wind speed",
-                    "value": "2.91",
-                    "unit": "mph",
-                    "category": "Wind"
-                },
-                {
-                    "measurement": "Direction of fastest 5-second wind",
-                    "value": "  150",
-                    "unit": "\u00b0",
-                    "category": "Wind"
-                }
-            ]
-        }
-
-        """
+        # See https://weatherforensics.dev/api.html for sample output. 
 
         logger.info("-" * 20)
     except Exception as e:
@@ -438,7 +295,8 @@ async def run_get_noaa_ncei_daily_weather(client: httpx.AsyncClient, latitude:fl
 # /api/noaa_ncei_hourly_weather
 async def run_get_noaa_ncei_hourly_weather(client: httpx.AsyncClient, latitude:float, longitude:float, local_datetime:datetime):
     """
-    Get hourly weather from the NOAA NCEI API endpoint.
+    Get monthly weather from the NOAA NCEI API endpoint using the WeatherForensics.dev endpoint.
+    WeatherForensics.dev will find the closest weather station with the most data and then acquire the weather data from NOAA.
     Automatically switches between datasets global-historical-climatology-network-hourly & global-hourly based on the transition data of 1 Jan 2025. 
     """
     endpoint = "/api/noaa_ncei_hourly_weather"
@@ -457,9 +315,7 @@ async def run_get_noaa_ncei_hourly_weather(client: httpx.AsyncClient, latitude:f
         result_data = response.json()
         print(f"Output Message: {result_data.get('message')}")
         print(f"Weather Summary: {result_data.get('weather_summary')}")
-
-        """
-        """
+        # See https://weatherforensics.dev/api.html for sample output. 
 
     except Exception as e:
         logger.error(f"ERROR: Failed to execute tool call. Details: {e}")
@@ -468,7 +324,8 @@ async def run_get_noaa_ncei_hourly_weather(client: httpx.AsyncClient, latitude:f
 # /api/noaa_nhc_tropical_cyclone/impact_to_location
 async def run_get_noaa_nhc_cyclone_impact_to_location(client: httpx.AsyncClient, latitude:float, longitude:float, local_datetime:datetime):
     """
-    
+    Get tropical cyclone weather from the NOAA NCEI API endpoint using the WeatherForensics.dev endpoint.
+    WeatherForensics.dev will find the closest weather station and then acquire the weather data from the NOAA NHC.    
     """
     endpoint = "/api/noaa_nhc_tropical_cyclone/impact_to_location"
     url = f"{BASE_URL}{endpoint}"
@@ -490,21 +347,7 @@ async def run_get_noaa_nhc_cyclone_impact_to_location(client: httpx.AsyncClient,
         
         print(f"Output Message: {result_data.get('message')}")
         print(f"Weather Summary: {result_data.get('weather_summary')}")
-        """
-        Output Message: Weather conditions from NOAA NHC for tropical cyclone impact at 26.674,-82.248 in 2022:
-
-        Weather Summary: DATA REPORT: Tropical Cyclone Impact Analysis
-        Target:
-        • Date: 28 Sep 2022
-        • Coordinates: 26.674,-82.248
-        Tropical Cyclone Analysis:
-        • Storm Name (ID): IAN (AL092022)
-        • Observation datetime (local): 28 Sep 2022 14:00:00
-        • Distance from storm track centroid to target: 3.5 miles
-        • Max 1-minute sustained wind speed at target (gusts will be higher): 155.4 mph
-        Impact Analysis:
-        • CRITICAL wind impact measured.
-        """
+        # See https://weatherforensics.dev/api.html for sample output. 
 
         logger.info("-" * 20)
     except Exception as e:
@@ -515,6 +358,7 @@ async def run_get_noaa_nhc_cyclone_impact_to_location(client: httpx.AsyncClient,
 async def run_get_noaa_swdi_nx3tvs_tornado_impact_to_location(client: httpx.AsyncClient, latitude:float, longitude:float, local_datetime:datetime):
     """
     Returns a report on any tornado impact to a specified location and year using data from NOAA NCEI Severe Weather Data Inventory (SWDI) API.
+    WeatherForensics.dev will find the closest NEXRAD3 and then acquire the weather data from the NOAA NCEI SWDI API.    
     """
     endpoint = "/api/noaa_swdi_nx3tvs_tornado_impact_to_location"
     url = f"{BASE_URL}{endpoint}"
@@ -534,22 +378,12 @@ async def run_get_noaa_swdi_nx3tvs_tornado_impact_to_location(client: httpx.Asyn
         #print(f"\nresult_data:\n{result_data}\n")
          
         print(f"Output Message: {result_data.get('message')}")
-        print(f"Weather Summary: {result_data.get('weather_summary')}")
-        """
-        Output Message: Weather conditions from NOAA NCEI Severe Weather Data Inventory (SWDI) at 40.7037,-89.4148 on 17 Nov 2013:
-
-        Weather Summary: DATA REPORT: Severe Weather Impact Analysis
-        Target:
-        • Date: 2013-11-17 06:00:00+00:00
-        • Coordinates: 40.7037,-89.4148
-        Severe Weather Analysis:
-        • Impact Type: Significant Wind Event
-        • Timestamp: 16:58:31 UTC
-        • Minimum Distance: 3.30 miles
-        • Peak Gust at Target: 65.9 mph
-        • Storm Dynamics: Moving E at 56.4 mph
-        • Intensity: Radar Shear of 69
-        """
+        #print(f"Weather Summary: {result_data.get('weather_summary')}")
+        # See https://weatherforensics.dev/api.html for sample output. 
+        # Pretty print the output
+        initial_dict = json.loads(result_data.get('weather_summary'))
+        fully_decoded_dict = decode_nested_json(initial_dict)
+        print(json.dumps(fully_decoded_dict, indent=4))
 
         logger.info("-" * 20)
     except Exception as e:
@@ -562,6 +396,7 @@ async def run_get_noaa_swdi_nx3tvs_tornado_impact_to_location(client: httpx.Asyn
 async def run_get_noaa_swdi_supercell_storm_nx3mda_impact_to_location(client: httpx.AsyncClient, latitude:float, longitude:float, local_datetime:datetime):
     """
     Returns a report on any supercell storm (nx3mda) impact to a specified specified location (latitude,longitude) and local date using data from NOAA NCEI Severe Weather Data Inventory (SWDI) API.
+    WeatherForensics.dev will find the closest NEXRAD3 and then acquire the weather data from the NOAA NCEI SWDI API.    
     
     NEXRAD Level-3 Mesocyclone Signatures  (A rotating updraft within a convective storm, typically a supercell thunderstorm).
     """
@@ -583,11 +418,13 @@ async def run_get_noaa_swdi_supercell_storm_nx3mda_impact_to_location(client: ht
         #print(f"\nresult_data:\n{result_data}\n")
          
         print(f"Output Message: {result_data.get('message')}")
-        print(f"Weather Summary: {result_data.get('weather_summary')}")
-        """
-        """
+        #print(f"Weather Summary: {result_data.get('weather_summary')}")
+        # See https://weatherforensics.dev/api.html for sample output. 
+        # Pretty print the output
+        initial_dict = json.loads(result_data.get('weather_summary'))
+        fully_decoded_dict = decode_nested_json(initial_dict)
+        print(json.dumps(fully_decoded_dict, indent=4))
 
-        logger.info("-" * 20)
     except Exception as e:
         logger.error(f"ERROR: Failed to execute tool call. Details: {e}")
         # Note: logger.exception() forces Python to print the full traceback, identifying exactly which line failed and why (Timeout vs. Encoding), even if the exception message is empty.
@@ -598,6 +435,7 @@ async def run_get_noaa_swdi_supercell_storm_nx3mda_impact_to_location(client: ht
 async def run_get_noaa_swdi_nx3hail_impact_to_location(client: httpx.AsyncClient, latitude:float, longitude:float, local_datetime:datetime):
     """
     Returns a report on any hail (nx3hail) impact to a specified specified location (latitude,longitude) and local date using data from NOAA NCEI SWDI API.
+    WeatherForensics.dev will find the closest NEXRAD3 and then acquire the weather data from the NOAA NCEI SWDI API.    
     
     nx3hail:        NEXRAD Level-3 Hail Signatures
     nx3hail predicts hail probability and maximum size.
@@ -620,9 +458,12 @@ async def run_get_noaa_swdi_nx3hail_impact_to_location(client: httpx.AsyncClient
         #print(f"\nresult_data:\n{result_data}\n")
          
         print(f"Output Message: {result_data.get('message')}")
-        print(f"Weather Summary: {result_data.get('weather_summary')}")
-        """
-        """
+        #print(f"Weather Summary: {result_data.get('weather_summary')}")
+        # See https://weatherforensics.dev/api.html for sample output. 
+        # Pretty print the output
+        initial_dict = json.loads(result_data.get('weather_summary'))
+        fully_decoded_dict = decode_nested_json(initial_dict)
+        print(json.dumps(fully_decoded_dict, indent=4))
 
         logger.info("-" * 20)
     except Exception as e:
@@ -635,6 +476,7 @@ async def run_get_noaa_swdi_nx3hail_impact_to_location(client: httpx.AsyncClient
 async def run_get_noaa_swdi_nx3structure_impact_to_location(client: httpx.AsyncClient, latitude:float, longitude:float, local_datetime:datetime):
     """
     Returns a report on any nx3structure impact to a specified specified location (latitude,longitude) and local date using data from NOAA NCEI SWDI API.
+    WeatherForensics.dev will find the closest NEXRAD3 and then acquire the weather data from the NOAA NCEI SWDI API.    
     
     nx3structure:   NEXRAD Level-3 Storm Structure
     nx3structure tells you how massive and water-loaded the storm hitting a target is.  Impacts in terms of heavy rainfall, flash flooding, and storm intensity are assessed.
@@ -658,11 +500,13 @@ async def run_get_noaa_swdi_nx3structure_impact_to_location(client: httpx.AsyncC
         if DEBUG: print(f"\nresult_data:\n{result_data}\n")
          
         print(f"Output Message: {result_data.get('message')}")
-        print(f"Weather Summary: {result_data.get('weather_summary')}")
-        """
-        """
+        #print(f"Weather Summary: {result_data.get('weather_summary')}")
+        # See https://weatherforensics.dev/api.html for sample output. 
+        # Pretty print the output
+        initial_dict = json.loads(result_data.get('weather_summary'))
+        fully_decoded_dict = decode_nested_json(initial_dict)
+        print(json.dumps(fully_decoded_dict, indent=4))
 
-        logger.info("-" * 20)
     except Exception as e:
         logger.error(f"ERROR: Failed to execute tool call. Details: {e}")
         # Note: logger.exception() forces Python to print the full traceback, identifying exactly which line failed and why (Timeout vs. Encoding), even if the exception message is empty.
@@ -700,7 +544,7 @@ async def main():
         # Test run_get_noaa_swdi_nx3tvs_tornado_impact_to_location()
         # Tornado at 40.7037,-89.4148 on 17 November 2013
         await run_get_noaa_swdi_nx3tvs_tornado_impact_to_location(client, 40.7037, -89.4148, datetime(2013, 11, 17))
-
+   
         # Test run_get_noaa_swdi_supercell_storm_nx3mda_impact_to_location
         # Supercell storm at 35.3412,-97.4867 on 20 May 2013
         await run_get_noaa_swdi_supercell_storm_nx3mda_impact_to_location(client, 35.3412, -97.4867, datetime(2013,5,20))
@@ -712,7 +556,6 @@ async def main():
         # Test run_get_noaa_swdi_nx3structure_impact_to_location
         # Storm at 41.3110,-94.4650 on 21 May 2024
         await run_get_noaa_swdi_nx3structure_impact_to_location(client, 41.3110, -94.4650, datetime(2024,5,21))
-
 
 if __name__ == "__main__":
     asyncio.run(main())
