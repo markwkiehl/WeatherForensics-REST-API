@@ -6,10 +6,11 @@
 
 # Define the script version in terms of Semantic Versioning (SemVer)
 # when Git or other versioning systems are not employed.
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 # v0.0.0    Release 2 February 2026 (rest_api_client.py)
 # v0.0.1    Importing content from mcp_fastapi_noaa_client.py v0.2.2
 # v0.0.2    Implement Google API Gateway
+# v0.0.3    Implement asynchronous retry logic in get_server_status() to address Cloud Run cold start delays. 
 
 
 """
@@ -104,7 +105,10 @@ PATH_SRC = PATH_BASE / "src"
 # Define the data directory: /app/data
 PATH_DATA = PATH_BASE / "data"
 
-# The Forever Free Tier clients will use the following BASE_URL:
+# ----------------------------------------------------------------------
+# Configure the WeatherForensics.dev REST API server URL
+
+# The Forever Free Tier clients of WeatherForensics.dev REST API will use the following BASE_URL:
 BASE_URL = "https://weatherforensics.dev/api/free"
 API_KEY = None
 
@@ -112,81 +116,88 @@ API_KEY = None
 #BASE_URL = "https://weatherforensics.dev/api/pro"
 #API_KEY = "your-39-character-api-key-#############"
 
-if DEBUG: logger.info(f"BASE_URL: {BASE_URL}")
-if DEBUG: logger.info(f"API_KEY: {API_KEY}")
+logger.info(f"BASE_URL: {BASE_URL}")
+logger.info(f"API_KEY: {API_KEY}")
 
 # ----------------------------------------------------------------------
 # Call API Server Endpoints
 
-async def get_server_status(client: httpx.AsyncClient, verbose:bool=False) -> bool:
+async def get_server_status(client: httpx.AsyncClient, verbose:bool=False, max_retries:int=3) -> bool:
     """
     Checks the server status using a shared client. 
     Returns True if the server responds successfully, False otherwise.
     """
-    try:
-        # We check the OpenAPI spec as a heartbeat
-        response = await client.get(f"{BASE_URL}/openapi.json")
-        if response.status_code == 200:
-            spec = response.json()
+    base_delay = 2.0
+    for attempt in range(max_retries):
+        try:
+            # We check the OpenAPI spec as a heartbeat
+            response = await client.get(f"{BASE_URL}/openapi.json")
+            response.raise_for_status()
+            
+            if response.status_code == 200:
+                spec = response.json()
 
-            # Extract info dictionary
-            info = spec.get("info", {})
-            title = info.get("title", "Unknown")
-            description = info.get("description", "No description provided")
+                # Extract info dictionary
+                info = spec.get("info", {})
+                title = info.get("title", "Unknown")
+                description = info.get("description", "No description provided")
 
-            # Extract version and contact
-            version = info.get("version", "Unknown")
-            contact = info.get("contact", {})
-            contact_name = contact.get("name", "Unknown")
-            contact_url = contact.get("url", "No Uniform Resource Locator (URL) provided")
+                # Extract version and contact
+                version = info.get("version", "Unknown")
+                contact = info.get("contact", {})
+                contact_name = contact.get("name", "Unknown")
+                contact_url = contact.get("url", "No Uniform Resource Locator (URL) provided")
 
-            if verbose:
-                logger.info(f"--- Server '{title}' v{version} is ONLINE ---")
-                logger.info(f"Server Description: {description}")
+                if verbose:
+                    logger.info(f"--- Server '{title}' v{version} is ONLINE ---")
+                    logger.info(f"Server Description: {description}")
 
-            # Extract available endpoint paths, HTTP methods, status codes, & query parameters.
-            endpoints_to_ignore = [
-                "/healthz",
-                "/readyz",
-                "/ready",
-                "/",
-            ]
-            endpoints = []
-            paths = spec.get("paths", {})
-            for path, methods_dict in paths.items():
-                if not path in endpoints_to_ignore:
-                    for method, operation in methods_dict.items():
-                        
-                        # Extract query and path parameters
-                        parameters = operation.get("parameters", [])
-                        param_names = [f"{p.get('name')} ({p.get('in')})" for p in parameters]
-                        
-                        # Check for a required request body
-                        request_body = operation.get("requestBody", {})
-                        body_required = request_body.get("required", False)
-                        
-                        endpoints.append(f"{path} | [{method.upper()}] | "
-                            f"Params: {', '.join(param_names) or 'None'} | "
-                            f"Body Required: {body_required}"
-                        )
-            # Append \n to each item, then join with an empty string
-            endpoints = "".join([f"{item}\n" for item in endpoints])
+                # Extract available endpoint paths, HTTP methods, status codes, & query parameters.
+                endpoints_to_ignore = [
+                    "/healthz",
+                    "/readyz",
+                    "/ready",
+                    "/",
+                ]
+                endpoints = []
+                paths = spec.get("paths", {})
+                for path, methods_dict in paths.items():
+                    if not path in endpoints_to_ignore:
+                        for method, operation in methods_dict.items():
+                            
+                            # Extract query and path parameters
+                            parameters = operation.get("parameters", [])
+                            param_names = [f"{p.get('name')} ({p.get('in')})" for p in parameters]
+                            
+                            # Check for a required request body
+                            request_body = operation.get("requestBody", {})
+                            body_required = request_body.get("required", False)
+                            
+                            endpoints.append(f"{path} | [{method.upper()}] | "
+                                f"Params: {', '.join(param_names) or 'None'} | "
+                                f"Body Required: {body_required}"
+                            )
+                # Append \n to each item, then join with an empty string
+                endpoints = "".join([f"{item}\n" for item in endpoints])
 
-            if verbose:
-                logger.info(f"Endpoints:\n{endpoints}")
+                if verbose:
+                    logger.info(f"Endpoints:\n{endpoints}")
+                    logger.info(f"Contact: {contact_name} at {contact_url}")
 
-                logger.info(f"Contact: {contact_name} at {contact_url}")
+                return True
+                
+        except (httpx.RequestError, httpx.HTTPStatusError) as e:
+            logger.warning(f"Connection attempt {attempt + 1} failed: {e}")
+            
+        if attempt < max_retries - 1:
+            delay = base_delay * (2 ** attempt)
+            logger.info(f"Retrying in {delay} seconds...")
+            await asyncio.sleep(delay)
 
-            return True
-        return False
-    except httpx.HTTPStatusError as e:
-        logger.error(f"--- Server is OFFLINE: HTTP {e.response.status_code} Error ---")
-        logger.error(f"Details: {e.response.text}")
-        return False
-    except httpx.RequestError as e:
-        logger.error(f"--- Server is OFFLINE: Network/Routing Error ---")
-        logger.error(f"Details: {e}")
-        return False
+    logger.error(f"--- Server is OFFLINE at {BASE_URL} after {max_retries} attempts ---")
+    return False
+
+
 
 # /api/noaa_ncei_monthly_weather
 async def run_get_noaa_ncei_monthly_weather(client: httpx.AsyncClient, latitude:float, longitude:float, local_datetime:datetime):
@@ -672,7 +683,7 @@ async def main():
         
         # Test run_get_noaa_ncei_monthly_weather()
         # Monthly weather at 40.4407,-76.12267 on 10 July 2025
-        #await run_get_noaa_ncei_monthly_weather(client, 40.4407, -76.12267, datetime(2025, 7, 10))
+        await run_get_noaa_ncei_monthly_weather(client, 40.4407, -76.12267, datetime(2025, 7, 10))
 
         # Test run_get_noaa_ncei_daily_weather()
         # Daily weather at 40.4407,-76.12267 on 10 July 2025
@@ -692,11 +703,11 @@ async def main():
 
         # Test run_get_noaa_swdi_supercell_storm_nx3mda_impact_to_location
         # Supercell storm at 35.3412,-97.4867 on 20 May 2013
-        #await run_get_noaa_swdi_supercell_storm_nx3mda_impact_to_location(client, 35.3412, -97.4867, datetime(2013,5,20))
+        await run_get_noaa_swdi_supercell_storm_nx3mda_impact_to_location(client, 35.3412, -97.4867, datetime(2013,5,20))
 
         # Test run_get_noaa_swdi_nx3hail_impact_to_location
         # Hail at 42.31476,-88.44616 on 27 August 2024
-        #await run_get_noaa_swdi_nx3hail_impact_to_location(client, 42.31476, -88.44616, datetime(2024, 8, 27))
+        await run_get_noaa_swdi_nx3hail_impact_to_location(client, 42.31476, -88.44616, datetime(2024, 8, 27))
 
         # Test run_get_noaa_swdi_nx3structure_impact_to_location
         # Storm at 41.3110,-94.4650 on 21 May 2024
