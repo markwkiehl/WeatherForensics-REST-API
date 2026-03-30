@@ -26,18 +26,18 @@ See also the WeatherForensics website at [WeatherForensics.dev](https://weatherf
 The API provides access to standard meteorological data and severe weather tracking via the following `POST` endpoints.
 
 **Standard Weather Endpoints:** (Sourced from NOAA NCEI)
-* `/api/noaa_ncei_monthly_weather`
-* `/api/noaa_ncei_daily_weather`
-* `/api/noaa_ncei_hourly_weather`
+- `/api/noaa_ncei_monthly_weather`
+- `/api/noaa_ncei_daily_weather`
+- `/api/noaa_ncei_hourly_weather`
 
 **Severe Weather Endpoints:** (Sourced from NOAA NCEI Severe Weather Data Inventory (SWDI))
-* `/api/noaa_swdi_nx3tvs_tornado_impact_to_location`
-* `/api/noaa_swdi_supercell_storm_nx3mda_impact_to_location`
-* `/api/noaa_swdi_nx3hail_impact_to_location`
-* `/api/noaa_swdi_nx3structure_impact_to_location`
+- `/api/noaa_swdi_nx3tvs_tornado_impact_to_location`
+- `/api/noaa_swdi_supercell_storm_nx3mda_impact_to_location`
+- `/api/noaa_swdi_nx3hail_impact_to_location`
+- `/api/noaa_swdi_nx3structure_impact_to_location`
 
 **Tropical Cyclone Endpoints:** (Derived from NOAA National Hurricane Center (NHC) HURDAT2)
-* `/api/noaa_nhc_tropical_cyclone/impact_to_location`
+- `/api/noaa_nhc_tropical_cyclone/impact_to_location`
 
 ---
 
@@ -81,6 +81,7 @@ WeatherForensics is deployed on Google Cloud Run and offers predictable pricing 
 ## 💻 Example Requests & Responses
 
 All endpoints require a JSON `POST` payload containing the target coordinates and local datetime in ISO format.
+When using the Forever Free subscription tier URL (https://weatherforensics.dev/api/free), your first request may return "Error: Request timed out" due to the server cold start.
 
 ###Standard Request Payload Format:
 ```
@@ -90,6 +91,25 @@ All endpoints require a JSON `POST` payload containing the target coordinates an
     "local_datetime_iso": "2013-11-17T00:00:00"
 }
 ```
+
+**cURL**:
+```
+curl --location 'https://weatherforensics.dev/api/free/api/noaa_ncei_monthly_weather' \
+--header 'Content-Type: application/json' \
+--data '{
+    "latitude": 40.4407,
+    "longitude": -76.12267,
+    "local_datetime_iso": "2025-07-10T00:00:00"
+}'
+```
+
+**Postman**
+```
+postman request POST 'https://weatherforensics.dev/api/free/api/noaa_ncei_monthly_weather' \
+  --header 'Content-Type: application/json' \
+  --body '{"latitude":40.4407,"longitude":-76.12267,"local_datetime_iso":"2025-07-10T00:00:00"}'
+```
+
 
 ### Monthly Weather
 Target: 40.4407, -76.12267 on 10 July 2025
