@@ -83,17 +83,18 @@ WeatherForensics is deployed on Google Cloud Run and offers predictable pricing 
 All endpoints require a JSON `POST` payload containing the target coordinates and local datetime in ISO format.
 When using the Forever Free subscription tier URL (https://weatherforensics.dev/api/free), your first request may return "Error: Request timed out" due to the server cold start.
 
-###Standard Request Payload Format:
-```
+
+**Standard Request Payload Format**:
+```json
 {
-    "latitude": 40.7037,
-    "longitude": -89.4148,
-    "local_datetime_iso": "2013-11-17T00:00:00"
+    "latitude": 40.4407,
+    "longitude": -76.12267,
+    "local_datetime_iso": "2025-07-10T00:00:00"
 }
 ```
 
 **cURL**:
-```
+```bash
 curl --location 'https://weatherforensics.dev/api/free/api/noaa_ncei_monthly_weather' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -104,7 +105,7 @@ curl --location 'https://weatherforensics.dev/api/free/api/noaa_ncei_monthly_wea
 ```
 
 **Postman**
-```
+```bash
 postman request POST 'https://weatherforensics.dev/api/free/api/noaa_ncei_monthly_weather' \
   --header 'Content-Type: application/json' \
   --body '{"latitude":40.4407,"longitude":-76.12267,"local_datetime_iso":"2025-07-10T00:00:00"}'
@@ -113,7 +114,7 @@ postman request POST 'https://weatherforensics.dev/api/free/api/noaa_ncei_monthl
 
 ### Monthly Weather
 Target: 40.4407, -76.12267 on 10 July 2025
-```
+```json
 {
     "event_type": "monthly_weather",
     "data_source": "NOAA_NCEI_Search_&_Data_Service_API",
@@ -148,7 +149,7 @@ Target: 40.4407, -76.12267 on 10 July 2025
 
 ### Daily Weather
 Target: 40.4407, -76.12267 on 10 July 2025
-```
+```json
 {
     "event_type": "daily_weather",
     "data_source": "NOAA_NCEI_Search_&_Data_Service_API",
@@ -184,7 +185,7 @@ Target: 40.4407, -76.12267 on 10 July 2025
 
 ### Hourly Weather
 Target: 40.4407, -76.12267 on 10 July 2025 at 13:00:00
-```
+```json
 {
     "event_type": "hourly_weather",
     "data_source": "NOAA_NCEI_Search_&_Data_Service_API",
@@ -281,7 +282,7 @@ Target: 40.4407, -76.12267 on 10 July 2025 at 13:00:00
 
 ### Tropical Cyclone Impact
 Target: 26.674, -82.248 on 28 September 2022
-```
+```json
 {
     "event_type": "tropical_cyclone",
     "data_source": "NOAA_NHC_HURDAT2_Database",
@@ -306,7 +307,7 @@ Target: 26.674, -82.248 on 28 September 2022
 
 ### Tornado Impact Analysis (nx3tvs)
 Target: 40.7037, -89.4148 on 17 November 2013
-```
+```json
 {
     "event_type": "tornado_vortex_signature",
     "data_source": "NOAA_NCEI_SWDI_NX3TVS",
@@ -340,7 +341,7 @@ Target: 40.7037, -89.4148 on 17 November 2013
 
 ### Supercell Storm (nx3mda)
 Target: 35.3412, -97.4867 on 20 May 2013
-```
+```json
 {
     "event_type": "supercell_mesocyclone",
     "data_source": "NOAA_NCEI_SWDI_NX3MDA",
@@ -371,7 +372,7 @@ Target: 35.3412, -97.4867 on 20 May 2013
 
 ### Hail Storm (nx3hail)
 Target: 42.31476, -88.44616 on 27 August 2024
-```
+```json
 {
     "event_type": "hail_storm",
     "data_source": "NOAA_NCEI_SWDI_NX3HAIL",
@@ -402,7 +403,7 @@ Target: 42.31476, -88.44616 on 27 August 2024
 
 ### Storm Cell Structure (nx3structure)
 Target: 41.3110, -94.4650 on 21 May 2024
-```
+```json
 {
     "event_type": "storm_cell_structure",
     "data_source": "NOAA_NCEI_SWDI_NX3STRUCTURE",
