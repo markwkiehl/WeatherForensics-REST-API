@@ -436,11 +436,12 @@ Target: 41.3110, -94.4650 on 21 May 2024
 
 When integrating the API, you may encounter the following standard HTTP status codes:
 
-* **`200 OK`**: The request was successful and the JavaScript Object Notation (JSON) payload is returned.
-* **`400 Bad Request`**: The request payload is malformed, missing required fields (`latitude`, `longitude`, `local_datetime_iso`), or contains invalid coordinates/dates.
-* **`401 Unauthorized`**: An invalid or missing API Key was provided for a Pro/Enterprise tier endpoint.
-* **`429 Too Many Requests`**: You have exceeded the rate limits for your specific subscription tier. Back off and retry later.
-* **`500 Internal Server Error`**: An unexpected error occurred on the server (e.g., upstream National Oceanic and Atmospheric Administration (NOAA) API timeouts).
+- **`200 OK`**: The request was successful and the JavaScript Object Notation (JSON) payload is returned.
+- **`400 Bad Request`**: The request payload is malformed, missing required fields (`latitude`, `longitude`, `local_datetime_iso`), or contains invalid coordinates/dates.
+- **`401 Unauthorized`**: An invalid or missing API Key was provided for a Pro/Enterprise tier endpoint.
+- **`429 Too Many Requests`**: You have exceeded the rate limits for your specific subscription tier. Back off and retry later.
+- **`500 Internal Server Error`**: An unexpected error occurred on the server (e.g., upstream National Oceanic and Atmospheric Administration (NOAA) API timeouts).
+- **`504 Gateway Timeout`**: The upstream NOAA API server is offline).
 
 ---
 
