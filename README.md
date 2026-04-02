@@ -6,6 +6,8 @@ WeatherForensics is a Data as a Service (DaaS) that provides comprehensive histo
 
 This repository contains information, documentation, and a sample Python client script (`rest_api_noaa_client.py`) to interact with the WeatherForensics Representational State Transfer (REST) Application Programming Interface (API).  
 
+👉 **[Launch the Interactive Live Demo](https://weatherforensics.dev/api/demo)**
+
 See also the WeatherForensics website at [WeatherForensics.dev](https://weatherforensics.dev/).
 
 ---
